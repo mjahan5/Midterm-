@@ -1,0 +1,101 @@
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext._
+
+val conf=new SparkConf().setMaster("local").setAppName("My App")
+
+val sc=new SparkContext(conf=conf)
+
+val fileToAnaylyze=sc.textFile("C:/textfile/Encrypted-1.txt")
+
+//Seperate Words
+val words=fileToAnaylyze.map(line=> line.toString)
+val words=fileToAnaylyze.flatMap(line=>line.split(" "))
+val x=words.collect
+val w=words.collect
+
+//Seperate Characters
+val chars=fileToAnaylyze.map(line=> line.toString)
+val chars=fileToAnaylyze.flatMap(line=>line.toList).filter( x => x.isLetter)
+val x=chars.collect
+val w=chars.collect
+
+//Collect total number of chars
+val charCounts=chars.map(chars=>(chars,1)).reduceByKey((x,y) => x+y)
+val k=charCounts.collect 
+
+//find most common and mostoccuring character 
+var mostoccurences = -1
+var mostcommon= ' '
+k.foreach(x=> 
+	if(mostoccurences < x._2){ 
+	 	mostoccurences = x._2
+         	mostcommon = x._1  
+	})
+
+
+println (mostcommon)
+println (mostoccurences)
+
+
+
+
+
+
+//shift
+
+def encrypt(text: String, s: Int): StringBuffer = {
+    val result: StringBuffer = new StringBuffer()
+    for (i <- 0 until text.length) { // traverse text and gets rid of unwannted elements
+      if (text.charAt(i).isLetter){ //used to pass text 
+      if (java.lang.Character.isUpperCase(text.charAt(i))) { 
+        val ch: Char = ((text.charAt(i).toInt + s - 65) % 26 + 65).toChar //upper case
+        result.append(ch)
+      } else {
+        val ch: Char = ((text.charAt(i).toInt + s - 97) % 26 + 97).toChar // lower case
+        result.append(ch)
+      }}else{ result.append(text.charAt(i)) }
+
+    }
+     result
+  }
+
+// Driver code
+    val text = sc.textFile("C:/textfile/Encrypted-1.txt")
+    val textFile = text.map(line=> encrypt(line, 13)) //.map used to apply encrypt function to lines of the text and shift charcters by 13 
+    textFile.collect.foreach(println) 
+    
+
+
+  
+
+
+var dict = scala.io.Source.fromFile("C:/textfile/dictionary.txt").getLines.toSet //random english word text file 
+dict.contains("TERM")// determine if the word TERM is in the dictionary 
+
+import scala.util.Random
+
+val random=new Random 
+val textFileList = textFile.collect().toList // collects a part of the text file that has been encrypted 
+
+val randomLine= textFileList(random.nextInt(textFileList.length)) // retrieve random sentences from the encrypted file and give us a list of words
+var words = randomLine.toString().split(" ")// split the list of words
+var validWords = 0 
+var checkedWords = 0
+for (word <- words) { //loop will check each word and pass it through the if statment
+	checkedWords = checkedWords + 1 //will count how many words are being checked in the list
+	if (dict.contains(word.toLowerCase()) == true) { // check to see if words are contained in the dictioanry and also changes the upper case words to lower case
+		validWords = validWords + 1 // once its been compared in if statment validWords will increase by 1 depending on how many words in the list are in the dictionary 
+	}
+}
+println(checkedWords) //number of  words checked
+println(validWords) // number of valid words after comapred in dictionary
+println((validWords*100/checkedWords) + " percent of words are valid.") // precentage of valid words that we are considering to be english based on our dictionary.
+
+ 
+
+
+
+
+
+    
